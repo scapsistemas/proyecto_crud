@@ -1,0 +1,336 @@
+<html>
+ <head>
+   
+  <script type="text/javascript"
+          src="http://www.google.com/jsapi">
+  </script>
+  <script type="text/javascript">
+      var id=0; 
+      var tasadolar=0;
+    google.load("language", "1");        
+  </script>
+<br>
+<br>
+</head>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+	<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"/>
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>	
+        <link rel="stylesheet" href="js/extjs/resources/css/ext-all.css" type="text/css">              
+        <script src="js/extjs/ext-all.js"></script>            
+       
+<style type="text/css">
+           .success {
+               color: #F4F6F7  ;
+                background: #1b89da;
+           }
+           
+           .cancelar {
+               color: #F4F6F7;
+                background: #B2BABB;
+            }
+            .guardar {
+               color: #F4F6F7;
+                background: #55AA66;
+            }
+
+            .eliminar {
+                color: #F4F6F7;
+                background: #9D3636;
+            }
+ </style>
+
+ 
+<script type="text/javascript">     
+$(document).ready(function(){ 
+        listar();
+});
+
+
+function listar(){
+    
+$('#gridProductos').show("low")
+var formatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 2
+});
+
+var precio=0;
+ // creemos un array de php y pasemos el contenido en una variable javascript.
+<?php  
+    $resp = $this->Productos[0];
+    $resp2 = $this->dolar[0];   
+?>  
+        
+         
+var jsvar  = '<?php echo($resp); ?>';
+var jsvar2  = '<?php echo($resp2); ?>';
+
+var parsed = JSON.parse(jsvar);
+var parsed2 = JSON.parse(jsvar2);
+
+for(var d = 0; d < parsed2.length; d++ ){  
+   tasadolar=([parsed2[d].USDCOP]);  
+}  
+
+$("#lbusdcop").text(tasadolar);
+$("#informa").text(tasadolar);
+
+var arr = [];
+for(var i = 0; i < parsed.length; i++ ){    
+   arr[i]=  [[parsed[i].id],[parsed[i].reference], [parsed[i].name.replace(/[~]/gi," ")],[parsed[i].description.replace(/[~]/gi," ")],[parsed[i].price[0].price]/tasadolar,[parsed[i].status]]; 
+}        
+   Ext.require([
+    		'Ext.grid.*',
+    		'Ext.data.*',
+    		'Ext.util.*',
+    		'Ext.state.*'
+		]);            
+                       
+    
+		Ext.onReady(function() {
+        var store_data = Ext.create('Ext.data.ArrayStore', {
+        	fields: [
+                {name: 'id'},
+                {name: 'reference'},
+           	{name: 'name'},
+           	{name: 'description'},
+                {name: 'price'},
+                {name: 'status'}
+        	],
+        	data: arr
+    	});
+   
+   
+   
+   
+    	// Crear el grid
+    var grid = Ext.create('Ext.grid.Panel', {
+        store: store_data,
+        width    : 250,              
+        stateId: 'stateGrid',
+        columns: [
+            {
+                text     : 'Id',
+                width    : 45,                
+                sortable : true,
+                dataIndex: 'id'               
+            },
+                        {
+                text     : 'Ref',
+                width    : 100,                
+                sortable : true,
+                dataIndex: 'reference'               
+            },
+            {
+                text     : 'Name',
+                width    : 200,                
+                sortable : true,
+                dataIndex: 'name'
+            },
+            {
+                text     : 'Description',
+                width    : 310,                
+                sortable : true,
+                dataIndex: 'description'
+            },
+            {
+                text     : 'Price $',
+                width    : 120,                
+                sortable : true,
+                dataIndex: 'price',
+                xtype: 'numbercolumn',
+                format: '000,000.00',
+                align: 'right'
+            },
+            {
+                text     : 'Status',
+                width    : 112,                
+                sortable : true,
+                dataIndex: 'status',
+                align: 'right'
+            },
+           // {
+               // xtype : 'actioncolumn',
+              //  header : "Action",
+               // items : [                      
+                 //   {                    
+                       // icon : '/imagen/delete.png',
+                        //tooltip : 'Enable App',
+                       // width : 50,
+                       // id:'enableAppId',
+                    ///    handler : function (grid, rowIndex) {
+        //}
+                   // }]
+            //}
+        ],
+        height: 350,
+        width: 912,
+        title: 'Productos',
+        renderTo: 'gridProductos',
+       listeners : {
+         itemclick: function(dv, record, item, index, e) {
+          id = record.get('id');
+          $('#ref').val(record.get('reference'));
+          $('#name').val(record.get('name'));
+          $('#description').val(record.get('description'));
+          precio=formatter.format(record.get('price'));
+          $('#price').val(precio.replace("$", ""));                   
+          $('#status').val(record.get('status'));
+          $("#guardar").hide("low");
+          $("#cancelar").hide("low");
+          $('#info').hide("low")
+}  
+       }
+        
+    });
+		});     
+}
+ 
+
+
+
+function eliminar() {
+//window.open("http://localhost/application/delete/"+id);
+if (parseInt(id)>0){
+		$.ajax({
+		type:"POST",
+		url: "<?=$this->basePath("/application/delete/")?>"+id,
+		success:function(data){			
+                location.reload();
+		}, error:function(jqXHR, textStatus, errorThrown){
+				alert ("Error: "+errorThrown);
+				console.log('error:: ' + errorThrown);
+		}		
+	});
+}else{
+        $('#info').show("low")
+        $("#info").text("Select the record");
+}
+}
+
+
+
+
+function modifi() {
+if (parseInt(id)>0){
+    $.ajax({
+            type:"POST",
+            url: "<?=$this->basePath("/application/modi/")?>"+id,
+            data: {ref:$('#ref').val(),name:$('#name').val(),description:$('#description').val(),price:($('#price').val().replace(",",""))*tasadolar,status:$('#status').val()},
+            success:function(data){			                   
+                    
+                  //  grid.getStore().removeAll();
+                    location.reload();
+            
+                    //$('#gridProductos').remove();
+                    //listar();
+            }, error:function(jqXHR, textStatus, errorThrown){
+                alert ("Error: "+errorThrown);
+                console.log('error:: ' + errorThrown);
+            }		
+    });
+}
+else{
+        $('#info').show("low")
+        $("#info").text("Select the record");
+}
+}
+
+function nuevo() {
+    $('#ref').val('');
+    $('#name').val('');
+    $('#description').val('');
+    $('#price').val('')
+    $('#status').val('active')
+    $('#ref').focus();
+    $("#guardar").show("low");
+    $("#cancelar").show("low");
+    $('#info').hide("low")
+}
+
+function cancelar() {
+    $('#ref').val('');
+    $('#name').val('');
+    $('#description').val('');
+    $('#price').val('')
+    $('#status').val('active')
+    $('#ref').focus();
+    $("#guardar").hide("low");
+    $("#cancelar").hide("low");
+    $('#info').hide("low")
+}
+
+
+function insertar() {
+//window.open("<?=$this->basePath("/application/inserta/")?>"+id+'/'+id2);
+$.ajax({
+	type:"POST",
+        url: "<?=$this->basePath("/application/inserta/")?>",
+       	data: {ref:$('#ref').val(),name:$('#name').val(),description:$('#description').val(),price:($('#price').val().replace(",",""))*tasadolar,status:$('#status').val()},
+	success:function(data){			                   
+	location.reload();
+	}, error:function(jqXHR, textStatus, errorThrown){
+            alert ("Error: "+errorThrown);
+            console.log('error:: ' + errorThrown);
+ }
+ 
+});
+}
+
+
+</script>
+<body> 
+
+
+<div class="ContentForm">
+<div class="container_12">
+<input id="insertar" class="btn success" type="submit" value="New" onclick="nuevo()" width="20" height="10"> </input>
+<input id="guardar" class="btn guardar" type="submit" value="Save" onclick="insertar()" width="25" height="15" style="display:none"> </input>
+<input id="cancelar" class="btn cancelar" type="submit" value="Cancel" onclick="cancelar()" width="25" height="15" style="display:none"> </input>
+<br>
+<br>
+
+<div style="width:1000px; padding:3px;">       
+   <div style="width:145px; float:left;"><input id="ref"  class="form-control" placeholder="Reference"></input></div>
+   <div style="width:200px; float:left;"><input id="name"  class="form-control" placeholder="Name"></input></div>
+   <div style="width:310px; float:left;"><input id="description"  class="form-control" placeholder="Description"></input></div>
+   <div style="width:120px; float:left;"><input id="price" style="text-align: right;" class="form-control" placeholder="Price"></input></div>
+   <div style="width:112px; float:left;">
+   <select id="status" class="form-control" style="text-align: right;">
+          <option>active</option>
+          <option>inactive</option>          
+    </select>          
+   </div>   
+</div>
+
+<br>
+</div>      
+</div>    
+<div id="gridProductos"/> 
+
+</div>
+    
+<br>
+<input id="eliminar" class="btn eliminar" type="submit" value="Delete" onclick="eliminar()" width="25" height="15"> </input>
+<input id="actualiza" class="btn cancelar" type="submit" value="Update" onclick="modifi()" width="25" height="15"> </input>
+<div style="width:370px; float:right;"><label>USDCOP: </label><label id="lbusdcop"></label></div>
+<br>
+<br>
+
+<div id="success" style="top: 40px; left: 400px; width:400px;display:none;"align="center" class="alert alert-success">...</div>
+<div id="info" style="top: 40px; left: 400px; width:400px;display:none;"align="center" class="alert alert-info">...</div>
+<div id="warning" style="top: 40px; left: 400px; width:400px;display:none;"align="center" class="alert alert-danger">...</div>
+<div id="danger" style="top: 40px; left: 400px; width:400px;display:none;"align="center" class="alert alert-warning">...</div>
+
+<!--<div id="informa" style="top: 40px; left: 400px; width:400px;"align="center"  class="alert alert-info"><p id="mensaje">Delete or modify should Select the record</p></div>-->
+<!--<input id="actualiza" class="btn insertar" type="submit" value="traduce" onclick="traduce()" width="25" height="15"> </input>-->
+</body>
+</html>
+
+
+
+
+
+
